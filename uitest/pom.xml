@@ -69,7 +69,7 @@
         </dependency>
 
         <!-- jetty-servlets needed by ProxyTest, but not by jetty-runner -->
-        <!-- Jetty before vaadin-* on the classpath to make Eclipse use the 
+        <!-- Jetty before vaadin-* on the classpath to make Eclipse use the
             right version -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -214,7 +214,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-testbench</artifactId>
-            <version>4.3-SNAPSHOT</version>
+            <version>4.2.2</version>
             <scope>test</scope>
         </dependency>
         <!-- This should be removed once tests have been updated to use lang3 -->
