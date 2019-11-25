@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gwt.aria.client.Roles;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
@@ -2499,6 +2500,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
      */
     private static final double DETAILS_ROW_INITIAL_HEIGHT = 50;
 
+    private static final String SELECT_ALL_CHECKBOX_ARIA_LABEL = "Select all rows";
+
     private EventCellReference<T> eventCell = new EventCellReference<T>(this);
 
     private class CellFocusHandler {
@@ -2971,6 +2974,12 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
                 selectAllCheckBox.setEnabled(enabled && userSelectionAllowed);
                 selectAllCheckBox.setStylePrimaryName(
                         getStylePrimaryName() + SELECT_ALL_CHECKBOX_CLASSNAME);
+                // label of checkbox should only be visible for assistive
+                // devices
+                selectAllCheckBox.addStyleName("v-assistive-device-only-label");
+                final Node inputNode = selectAllCheckBox.getElement().getChild(0);
+                Roles.getCheckboxRole()
+                     .setAriaLabelProperty(Element.as(inputNode), SELECT_ALL_CHECKBOX_ARIA_LABEL);
                 selectAllCheckBox.addValueChangeHandler(
                         new ValueChangeHandler<Boolean>() {
 
@@ -3829,6 +3838,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             initWidget(rootContainer);
 
             openCloseButton = new Button();
+            openCloseButton.getElement()
+                .setAttribute("aria-label", "column hider");
 
             openCloseButton.addClickHandler(openCloseButtonHandler);
 
@@ -4825,6 +4836,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
          */
         protected String headerCaption = "";
 
+        protected String assistiveCaption = null;
+
         /**
          * The hiding-toggle-caption of this column.
          */
@@ -4939,7 +4952,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
                     updateHeader();
                 }
             }
-
+            setAssistiveCaption(caption);
             return this;
         }
 
@@ -4951,6 +4964,38 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
          */
         public String getHeaderCaption() {
             return headerCaption;
+        }
+
+        /**
+         * Sets the header aria-label for this column.
+         *
+         * @param caption
+         *            The header aria-label for this column
+         * @return the column itself
+         *
+         * @since 8.2
+         */
+        public Column<C, T> setAssistiveCaption(String caption) {
+            if ((this.assistiveCaption == caption)
+                    || (this.assistiveCaption != null && this.assistiveCaption.equals(caption))) {
+                this.assistiveCaption = caption;
+                if (grid != null) {
+                    grid.getHeader().requestSectionRefresh();
+                }
+            }
+
+            return this;
+        }
+
+        /**
+         * Returns the current header aria-label for this column.
+         *
+         * @return the header aria-label string
+         *
+         * @since 8.2
+         */
+        public String getAssistiveCaption() {
+            return assistiveCaption;
         }
 
         private void updateHeader() {
@@ -5629,10 +5674,16 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
 
             rowReference.set(rowIndex, rowData, rowElement);
 
-            if (hasData) {
-                setStyleName(rowElement, rowSelectedStyleName,
-                        isSelected(rowData));
+            boolean isSelected = hasData && isSelected(rowData);
+            if (Grid.this.isSelectionAllowed()) {
+                rowElement.setAttribute("aria-selected",
+                        String.valueOf(isSelected));
+            } else {
+                rowElement.removeAttribute("aria-selected");
+            }
 
+            if (hasData) {
+                setStyleName(rowElement, rowSelectedStyleName, isSelected);
                 if (rowStyleGenerator != null) {
                     try {
                         String rowStylename = rowStyleGenerator
@@ -5802,6 +5853,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
 
                 // Decorate default row with sorting indicators
                 if (staticRow instanceof HeaderRow) {
+                    addAriaLabelToHeaderRow(cell);
                     addSortingIndicatorsToHeaderRow((HeaderRow) staticRow,
                             cell);
                 }
@@ -6034,6 +6086,20 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             }
         }
 
+        private void addAriaLabelToHeaderRow(FlyweightCell cell) {
+
+            Element cellElement = cell.getElement();
+
+            final Column<?, T> column = getVisibleColumn(cell.getColumn());
+
+            if (column.getAssistiveCaption() != null) {
+                cellElement.setAttribute("aria-label",
+                        column.getAssistiveCaption());
+            } else {
+                cellElement.removeAttribute("aria-label");
+            }
+        }
+
         private void addSortingIndicatorsToHeaderRow(HeaderRow headerRow,
                 FlyweightCell cell) {
 
@@ -6054,6 +6120,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
 
             if (sortable) {
                 cellElement.addClassName("sortable");
+                cellElement.setAttribute("aria-sort", "none");
             }
 
             if (!sortable || sortingOrder == null) {
@@ -6063,8 +6130,10 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
 
             if (SortDirection.ASCENDING == sortingOrder.getDirection()) {
                 cellElement.addClassName("sort-asc");
+                cellElement.setAttribute("aria-sort", "ascending");
             } else {
                 cellElement.addClassName("sort-desc");
+                cellElement.setAttribute("aria-sort", "descending");
             }
 
             int sortIndex = Grid.this.getSortOrder().indexOf(sortingOrder);
@@ -6073,6 +6142,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
                 // sorted and other sorted columns also exists.
                 cellElement.setAttribute("sort-order",
                         String.valueOf(sortIndex + 1));
+                cellElement.setAttribute("aria-sort", "other");
             }
 
             if (!sortedBefore) {
@@ -6114,6 +6184,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
         private void cleanup(FlyweightCell cell) {
             Element cellElement = cell.getElement();
             cellElement.removeAttribute("sort-order");
+            cellElement.removeAttribute("aria-sort");
             cellElement.removeClassName("sort-desc");
             cellElement.removeClassName("sort-asc");
             cellElement.removeClassName("sortable");
@@ -6183,6 +6254,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
         cellFocusHandler = new CellFocusHandler();
 
         setStylePrimaryName(STYLE_NAME);
+        setAriaRole("grid");
 
         escalator.getHeader().setEscalatorUpdater(createHeaderUpdater());
         escalator.getBody().setEscalatorUpdater(createBodyUpdater());
@@ -6341,6 +6413,18 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             refreshBody();
             refreshFooter();
         }
+    }
+
+    /**
+     * Adds the given role as 'role="$param"' to the <code>&lt;table&gt;</code>
+     * element of the grid.
+     *
+     * @param role
+     *            the role param
+     * @since 8.2
+     */
+    protected void setAriaRole(String role) {
+        escalator.getTable().setAttribute("role", role);
     }
 
     /**
@@ -7997,8 +8081,24 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
         setSelectColumnRenderer(
                 this.selectionModel.getSelectionColumnRenderer());
 
+        if (isMultiSelectionAllowed()) {
+            escalator.getTable().setAttribute("aria-multiselectable", "true");
+        } else if (isSelectionAllowed()) {
+            escalator.getTable().setAttribute("aria-multiselectable", "false");
+        } else {
+            escalator.getTable().removeAttribute("aria-multiselectable");
+        }
         // Refresh rendered rows to update selection, if it has changed
         refreshBody();
+    }
+
+    protected boolean isMultiSelectionAllowed() {
+        return this.selectionModel instanceof SelectionModel.Multi;
+    }
+
+    protected boolean isSelectionAllowed() {
+        return isMultiSelectionAllowed()
+                || this.selectionModel instanceof SelectionModel.Single;
     }
 
     /**

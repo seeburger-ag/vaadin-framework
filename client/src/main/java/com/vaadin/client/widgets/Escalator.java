@@ -132,7 +132,7 @@ import com.vaadin.shared.util.SharedUtil;
 
  Each RowContainer can be thought to have three levels of
  indices for any given displayed row (but the distinction
- matters primarily for the BodyRowContainerImpl, because of 
+ matters primarily for the BodyRowContainerImpl, because of
  the way it scrolls through data):
 
  - Logical index
@@ -151,8 +151,8 @@ import com.vaadin.shared.util.SharedUtil;
  (because of 0-based indices). In Header and
  FooterRowContainers, you are safe to assume that the logical
  index is the same as the physical index. But because the
- BodyRowContainerImpl never displays large data sources 
- entirely in the DOM, a physical index usually has no 
+ BodyRowContainerImpl never displays large data sources
+ entirely in the DOM, a physical index usually has no
  apparent direct relationship with its logical index.
 
  VISUAL INDEX is the index relating to the order that you
@@ -1136,6 +1136,116 @@ public class Escalator extends Widget
         }
     }
 
+    /**
+     * Helper class that helps to implement the WAI-ARIA functionality for the
+     * Grid and TreeGrid component.
+     * <p>
+     * The following WAI-ARIA attributes are added through this class:
+     *
+     * <ul>
+     *     <li>aria-rowcount (since 8.2)</li>
+     *     <li>roles provided by {@link AriaGridRole} (since 8.2)</li>
+     * </ul>
+     *
+     * @since 8.2
+     */
+    public class AriaGridHelper {
+
+        /**
+         * This field contains the total number of rows from the grid including
+         * rows from thead, tbody and tfoot.
+         *
+         * @since 8.2
+         */
+        private int allRows;
+
+        /**
+         * Adds the given numberOfRows to allRows and calls
+         * {@link #updateAriaRowCount()}.
+         *
+         * @param numberOfRows
+         *            number of rows that were added to the grid
+         *
+         * @since 8.2
+         */
+        public void addRows(int numberOfRows) {
+            allRows += numberOfRows;
+            updateAriaRowCount();
+        }
+
+        /**
+         * Removes the given numberOfRows from allRows and calls
+         * {@link #updateAriaRowCount()}.
+         *
+         * @param numberOfRows
+         *            number of rows that were removed from the grid
+         *
+         * @since 8.2
+         */
+        public void removeRows(int numberOfRows) {
+            allRows -= numberOfRows;
+            updateAriaRowCount();
+        }
+
+        /**
+         * Sets the aria-rowcount attribute with the current value of
+         * {@link AriaGridHelper#allRows} if the grid is attached and
+         * {@link AriaGridHelper#allRows} > 0.
+         *
+         * @since 8.2
+         */
+        public void updateAriaRowCount() {
+            if (!isAttached() || 0 > allRows) {
+
+                return;
+            }
+
+            getTable().setAttribute("aria-rowcount", String.valueOf(allRows));
+        }
+
+        /**
+         * Sets the {@code role} attribute to the given element.
+         *
+         * @param element     element that should get the role attribute
+         * @param role        role to be added
+         *
+         * @since 8.2
+         */
+        public void updateRole(final Element element, AriaGridRole role) {
+            element.setAttribute("role", role.getName());
+        }
+    }
+
+    /**
+     * Holds the currently used aria roles within the grid for rows and cells.
+     *
+     * @since 8.2
+     */
+    public enum AriaGridRole {
+
+        ROW("row"),
+        ROWHEADER("rowheader"),
+        ROWGROUP("rowgroup"),
+        GRIDCELL("gridcell"),
+        COLUMNHEADER("columnheader");
+
+        private final String name;
+
+
+        AriaGridRole(String name) {
+            this.name = name;
+        }
+
+        /**
+         * Return the name of the {@link AriaGridRole}.
+         *
+         * @return String name to be used as role attribute
+         */
+        public String getName() {
+            return name;
+        }
+    }
+
     public abstract class AbstractRowContainer implements RowContainer {
         private EscalatorUpdater updater = EscalatorUpdater.NULL;
 
@@ -1143,8 +1253,8 @@ public class Escalator extends Widget
 
         /**
          * The table section element ({@code <thead>}, {@code <tbody>} or
-         * {@code <tfoot>}) the rows (i.e. {@code 
-         * 
+         * {@code <tfoot>}) the rows (i.e. {@code
+         *
         <tr>
          * } tags) are contained in.
          */
@@ -1163,6 +1273,7 @@ public class Escalator extends Widget
         public AbstractRowContainer(
                 final TableSectionElement rowContainerElement) {
             root = rowContainerElement;
+            ariaGridHelper.updateRole(root, AriaGridRole.ROWGROUP);
         }
 
         @Override
@@ -1182,6 +1293,34 @@ public class Escalator extends Widget
          * @see #createCellElement(int, int)
          */
         protected abstract String getCellElementTagName();
+
+        /**
+         * Gets the role attribute of an element to represent a cell in a row.
+         * <p>
+         * Usually {@link AriaGridRole#GRIDCELL} except for a cell in
+         * the header.
+         *
+         * @return the role attribute for the element to represent cells
+         *
+         * @since 8.2
+         */
+        protected AriaGridRole getCellElementRole() {
+            return AriaGridRole.GRIDCELL;
+        }
+
+        /**
+         * Gets the role attribute of an element to represent a row in a grid.
+         * <p>
+         * Usually {@link AriaGridRole#ROW} except for a row in
+         * the header.
+         *
+         * @return the role attribute for the element to represent rows
+         *
+         * @since 8.2
+         */
+        protected AriaGridRole getRowElementRole() {
+            return AriaGridRole.ROW;
+        }
 
         @Override
         public EscalatorUpdater getEscalatorUpdater() {
@@ -1226,6 +1365,7 @@ public class Escalator extends Widget
             assertArgumentsAreValidAndWithinRange(index, numberOfRows);
 
             rows -= numberOfRows;
+            ariaGridHelper.removeRows(numberOfRows);
 
             if (!isAttached()) {
                 return;
@@ -1349,7 +1489,7 @@ public class Escalator extends Widget
             }
 
             rows += numberOfRows;
-
+            ariaGridHelper.addRows(numberOfRows);
             /*
              * only add items in the DOM if the widget itself is attached to the
              * DOM. We can't calculate sizes otherwise.
@@ -1413,6 +1553,7 @@ public class Escalator extends Widget
                 final TableRowElement tr = TableRowElement.as(DOM.createTR());
                 addedRows.add(tr);
                 tr.addClassName(getStylePrimaryName() + "-row");
+                ariaGridHelper.updateRole(tr, getRowElementRole());
 
                 for (int col = 0; col < columnConfiguration
                         .getColumnCount(); col++) {
@@ -1569,6 +1710,7 @@ public class Escalator extends Widget
                 cellElem.getStyle().setWidth(width, Unit.PX);
             }
             cellElem.addClassName(getStylePrimaryName() + "-cell");
+            ariaGridHelper.updateRole(cellElem, getCellElementRole());
             return cellElem;
         }
 
@@ -1829,8 +1971,8 @@ public class Escalator extends Widget
          * Applies the total length of the columns to each row element.
          * <p>
          * <em>Note:</em> In contrast to {@link #reapplyColumnWidths()}, this
-         * method only modifies the width of the {@code 
-         * 
+         * method only modifies the width of the {@code
+         *
         <tr>
          * } element, not the cells within.
          */
@@ -2158,7 +2300,7 @@ public class Escalator extends Widget
 
         /**
          * Gets the logical row index for the given table row element.
-         * 
+         *
          * @param tr
          *            the table row element inside this container.
          * @return the logical index of the given element
@@ -2360,6 +2502,16 @@ public class Escalator extends Widget
         @Override
         protected String getCellElementTagName() {
             return "th";
+        }
+
+        @Override
+        protected AriaGridRole getRowElementRole() {
+            return AriaGridRole.ROWHEADER;
+        }
+
+        @Override
+        protected AriaGridRole getCellElementRole() {
+            return AriaGridRole.COLUMNHEADER;
         }
 
         @Override
@@ -3319,7 +3471,7 @@ public class Escalator extends Widget
                          * |3| ==> |*| ==> |5| <- newly rendered
                          * |4|     |*|
                          *  5       5
-                         *  
+                         *
                          *  1       1      |1| <- newly rendered
                          * |2|     |*|     |4|
                          * |3| ==> |*| ==> |5| <- newly rendered
@@ -3366,7 +3518,7 @@ public class Escalator extends Widget
                          *  1      |1| <-- newly rendered (by scrolling)
                          * |4|     |4|
                          * |*| ==> |*|
-                         * |*|       
+                         * |*|
                          *  5       5
                          */
                         final double newScrollTop = contentBottom
@@ -3398,7 +3550,7 @@ public class Escalator extends Widget
                          * |1|     |1|
                          * |4| ==> |4|
                          * |*|     |5| <-- newly rendered
-                         *           
+                         *
                          *  5
                          */
 
@@ -3471,7 +3623,7 @@ public class Escalator extends Widget
              *  :       :      |4| <- newly rendered
              * |5|     |5|     |5|
              * |6| ==> |*| ==> |7|
-             * |7|     |7|     
+             * |7|     |7|
              */
 
             final int logicalTargetIndex = getLogicalRowIndex(
@@ -5610,6 +5762,8 @@ public class Escalator extends Widget
     private final VerticalScrollbarBundle verticalScrollbar = new VerticalScrollbarBundle();
     private final HorizontalScrollbarBundle horizontalScrollbar = new HorizontalScrollbarBundle();
 
+    private final AriaGridHelper ariaGridHelper = new AriaGridHelper();
+
     private final HeaderRowContainer header = new HeaderRowContainer(headElem);
     private final BodyRowContainerImpl body = new BodyRowContainerImpl(
             bodyElem);
@@ -5624,6 +5778,7 @@ public class Escalator extends Widget
 
     private final ColumnConfigurationImpl columnConfiguration = new ColumnConfigurationImpl();
     private final DivElement tableWrapper;
+    private final Element table;
 
     private final DivElement horizontalScrollbarDeco = DivElement
             .as(DOM.createDiv());
@@ -5676,7 +5831,7 @@ public class Escalator extends Widget
 
         root.appendChild(tableWrapper);
 
-        final Element table = DOM.createTable();
+        table = DOM.createTable();
         tableWrapper.appendChild(table);
 
         table.appendChild(headElem);
@@ -6765,6 +6920,31 @@ public class Escalator extends Widget
         return null;
     }
 
+    /**
+     * Returns the {@code <div class="{primary-stylename}-tablewrapper" />}
+     * element which has the table inside it. {primary-stylename} is .e.g
+     * {@code v-grid}.
+     * <p>
+     * <em>NOTE: you should not do any modifications to the returned element.
+     * This API is only available for querying data from the element.</em>
+     *
+     * @return the table wrapper element
+     * @since 8.1
+     */
+    public Element getTableWrapper() {
+        return tableWrapper;
+    }
+
+    /**
+     * Returns the <code>&lt;table&gt;</code> element of the grid.
+     *
+     * @return the table element
+     * @since 8.2
+     */
+    public Element getTable() {
+        return table;
+    }
+
     private Element getSubPartElementTableStructure(SubPartArguments args) {
 
         String type = args.getType();
@@ -6936,7 +7116,7 @@ public class Escalator extends Widget
 
     /**
      * Internal method for checking whether the browser is IE11 or Edge
-     * 
+     *
      * @return true only if the current browser is IE11, or Edge
      */
     private static boolean isCurrentBrowserIE11OrEdge() {

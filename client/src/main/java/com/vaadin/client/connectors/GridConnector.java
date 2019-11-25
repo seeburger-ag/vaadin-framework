@@ -192,6 +192,7 @@ public class GridConnector extends AbstractHasComponentsConnector
             this.resizable = state.resizable;
             this.sortable = state.sortable;
             this.headerCaption = state.headerCaption == null ? "" : state.headerCaption;
+            this.assistiveCaption = state.headerCaption;
             this.widthUser = state.width;
             this.minimumWidthPx = state.minWidth;
             this.maximumWidthPx = state.maxWidth;
