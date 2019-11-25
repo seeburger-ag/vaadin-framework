@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-root</artifactId>
-        <version>7.7.17.SEE1-SNAPSHOT</version>
+        <version>7.7.17.SEE1</version>
     </parent>
     <artifactId>vaadin-push</artifactId>
     <name>vaadin-push</name>
@@ -48,34 +47,23 @@
                         <!-- <inherited>false</inherited> -->
                         <configuration>
                             <target>
-                                <property name="javascript.unpack"
-                                    location="${project.build.directory}/temp" />
-                                <property name="vaadinPush.js"
-                                    location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug.js" />
-                                <property name="templates.dir"
-                                    location="${project.build.sourceDirectory}/../templates" />
+                                <property name="javascript.unpack" location="${project.build.directory}/temp" />
+                                <property name="vaadinPush.js" location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug.js" />
+                                <property name="templates.dir" location="${project.build.sourceDirectory}/../templates" />
 
                                 <!-- Unzip to temp dir -->
-                                <unzip
-                                    src="${maven.dependency.com.vaadin.external.atmosphere.client.javascript.war.path}"
-                                    dest="${javascript.unpack}">
+                                <unzip src="${maven.dependency.com.vaadin.external.atmosphere.client.javascript.war.path}" dest="${javascript.unpack}">
                                     <patternset>
                                         <include name="**/atmosphere.js" />
                                     </patternset>
                                     <mapper type="flatten" />
                                 </unzip>
-                                <loadfile
-                                    srcfile="${javascript.unpack}/atmosphere.js"
-                                    property="atmosphere.js.contents" />
+                                <loadfile srcfile="${javascript.unpack}/atmosphere.js" property="atmosphere.js.contents" />
 
-                                <loadfile
-                                    srcfile="${templates.dir}/vaadinPush.js.tpl"
-                                    property="vaadinPush.js.contents">
+                                <loadfile srcfile="${templates.dir}/vaadinPush.js.tpl" property="vaadinPush.js.contents">
                                     <filterchain>
-                                        <replacetokens
-                                            begintoken="@" endtoken="@">
-                                            <token key="atmosphere.js"
-                                                value="${atmosphere.js.contents}" />
+                                        <replacetokens begintoken="@" endtoken="@">
+                                            <token key="atmosphere.js" value="${atmosphere.js.contents}" />
                                         </replacetokens>
                                     </filterchain>
                                 </loadfile>
@@ -94,21 +82,15 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="vaadinPush.debug.js"
-                                    location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug.js" />
-                                <property name="vaadinPush-min.js"
-                                    location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug-min.js" />
-                                <property name="vaadinPush.js"
-                                    location="${project.build.outputDirectory}/VAADIN/vaadinPush.js" />
+                                <property name="vaadinPush.debug.js" location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug.js" />
+                                <property name="vaadinPush-min.js" location="${project.build.outputDirectory}/VAADIN/vaadinPush.debug-min.js" />
+                                <property name="vaadinPush.js" location="${project.build.outputDirectory}/VAADIN/vaadinPush.js" />
 
-                                <move file="${vaadinPush-min.js}"
-                                    tofile="${vaadinPush.js}" />
+                                <move file="${vaadinPush-min.js}" tofile="${vaadinPush.js}" />
 
                                 <!-- Gzipped versions -->
-                                <gzip src="${vaadinPush.debug.js}"
-                                    destfile="${vaadinPush.debug.js}.gz" />
-                                <gzip src="${vaadinPush.js}"
-                                    destfile="${vaadinPush.js}.gz" />
+                                <gzip src="${vaadinPush.debug.js}" destfile="${vaadinPush.debug.js}.gz" />
+                                <gzip src="${vaadinPush.js}" destfile="${vaadinPush.js}.gz" />
                             </target>
                         </configuration>
                     </execution>

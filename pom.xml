@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.vaadin</groupId>
@@ -10,7 +9,7 @@
     <artifactId>vaadin-root</artifactId>
     <name>vaadin-root</name>
     <packaging>pom</packaging>
-    <version>7.7.17.SEE1-SNAPSHOT</version>
+    <version>7.7.17.SEE1</version>
 
     <prerequisites>
         <maven>3.1.0</maven>
@@ -76,7 +75,7 @@
         <connection>scm:git:git@github.com:seeburger-ag/vaadin-framework.git</connection>
         <developerConnection>scm:git:git@github.com:seeburger-ag/vaadin-framework.git</developerConnection>
         <url>https://github.com/seeburger-ag/vaadin-framework</url>
-      <tag>HEAD</tag>
+      <tag>vaadin-root-7.7.17.SEE1</tag>
   </scm>
 
     <modules>
@@ -239,7 +238,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>

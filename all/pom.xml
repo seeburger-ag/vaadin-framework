@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-root</artifactId>
-        <version>7.7.17.SEE1-SNAPSHOT</version>
+        <version>7.7.17.SEE1</version>
     </parent>
     <artifactId>vaadin-all</artifactId>
     <name>vaadin-all</name>
@@ -120,37 +119,23 @@
                         </goals>
                         <configuration>
                             <target>
-                                <loadfile property="release-notes-tickets"
-                                    srcFile="${relnotes.tickets.file}"
-                                    failonerror="false" />
-                                <loadfile property="release-notes-authors"
-                                    srcFile="${relnotes.authors.file}"
-                                    failonerror="false" />
+                                <loadfile property="release-notes-tickets" srcFile="${relnotes.tickets.file}" failonerror="false" />
+                                <loadfile property="release-notes-authors" srcFile="${relnotes.authors.file}" failonerror="false" />
                                 <copy todir="${webcontent.dir}">
                                     <fileset dir="src/main/templates/">
                                         <patternset>
-                                            <include
-                                                name="release-notes.html" />
+                                            <include name="release-notes.html" />
                                         </patternset>
                                     </fileset>
                                     <filterchain>
                                         <expandproperties />
-                                        <replacetokens
-                                            begintoken="@" endtoken="@">
-                                            <token key="version"
-                                                value="${project.version}" />
-                                            <token key="version-minor"
-                                                value="${parsedVersion.majorVersion}.${parsedVersion.minorVersion}" />
-                                            <token key="gwt-version"
-                                                value="${vaadin.gwt.version}" />
-                                            <token key="builddate"
-                                                value="${maven.build.timestamp}" />
-                                            <token
-                                                key="release-notes-tickets"
-                                                value="${release-notes-tickets}" />
-                                            <token
-                                                key="release-notes-authors"
-                                                value="${release-notes-authors}" />
+                                        <replacetokens begintoken="@" endtoken="@">
+                                            <token key="version" value="${project.version}" />
+                                            <token key="version-minor" value="${parsedVersion.majorVersion}.${parsedVersion.minorVersion}" />
+                                            <token key="gwt-version" value="${vaadin.gwt.version}" />
+                                            <token key="builddate" value="${maven.build.timestamp}" />
+                                            <token key="release-notes-tickets" value="${release-notes-tickets}" />
+                                            <token key="release-notes-authors" value="${release-notes-authors}" />
                                         </replacetokens>
                                     </filterchain>
                                 </copy>

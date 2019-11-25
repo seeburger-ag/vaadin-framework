@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-root</artifactId>
-        <version>7.7.17.SEE1-SNAPSHOT</version>
+        <version>7.7.17.SEE1</version>
     </parent>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-themes</artifactId>
@@ -283,20 +282,13 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="reindeer.theme.path"
-                                    value="${project.build.outputDirectory}/VAADIN/themes/reindeer/" />
+                                <property name="reindeer.theme.path" value="${project.build.outputDirectory}/VAADIN/themes/reindeer/" />
 
-                                <move
-                                    file="${reindeer.theme.path}/styles-sprite.css"
-                                    tofile="${reindeer.theme.path}/styles.css" />
+                                <move file="${reindeer.theme.path}/styles-sprite.css" tofile="${reindeer.theme.path}/styles.css" />
 
-                                <move
-                                    file="${reindeer.theme.path}/legacy-styles-sprite.css"
-                                    tofile="${reindeer.theme.path}/legacy-styles.css" />
+                                <move file="${reindeer.theme.path}/legacy-styles-sprite.css" tofile="${reindeer.theme.path}/legacy-styles.css" />
 
-                                <gzip
-                                    src="${reindeer.theme.path}/styles.css"
-                                    destfile="${reindeer.theme.path}/styles.css.gz" />
+                                <gzip src="${reindeer.theme.path}/styles.css" destfile="${reindeer.theme.path}/styles.css.gz" />
                             </target>
                         </configuration>
                     </execution>
@@ -312,8 +304,8 @@
                         <Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</Bundle-Version>
                         <Bundle-RequiredExecutionEnvironment>JavaSE-1.6</Bundle-RequiredExecutionEnvironment>
                         <!-- Export package is handled in exec plugin -->
-                        <Export-Package></Export-Package>
-                        <Import-Package></Import-Package>
+                        <Export-Package />
+                        <Import-Package />
                     </instructions>
                 </configuration>
                 <executions>
