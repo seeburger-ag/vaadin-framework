@@ -64,6 +64,11 @@ public class WindowConnector extends AbstractSingleComponentContainerConnector
 
     private Node windowClone;
 
+    /**
+     * The current scroll position of the window.
+     */
+    private int scrollTop;
+
     private ClickEventHandler clickEventHandler = new ClickEventHandler(this) {
         @Override
         protected void fireClick(NativeEvent event,
@@ -231,6 +236,9 @@ public class WindowConnector extends AbstractSingleComponentContainerConnector
         boolean hasContent = (content != null);
         Element contentElement = window.contentPanel.getElement();
 
+        // restore the scroll position
+        contentElement.setScrollTop(this.scrollTop);
+
         Style contentStyle = window.contents.getStyle();
 
         int headerHeight = lm.getOuterHeight(window.header);
@@ -380,6 +388,8 @@ public class WindowConnector extends AbstractSingleComponentContainerConnector
 
         VWindow window = getWidget();
         WindowState state = getState();
+
+        this.scrollTop = state.scrollTop;
 
         if (state.modal != window.vaadinModality) {
             window.setVaadinModality(!window.vaadinModality);
