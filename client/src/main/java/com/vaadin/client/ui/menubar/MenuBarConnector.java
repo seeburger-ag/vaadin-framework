@@ -26,6 +26,7 @@ import com.vaadin.client.ApplicationConnection;
 import com.vaadin.client.Paintable;
 import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.UIDL;
+import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.client.ui.Icon;
 import com.vaadin.client.ui.SimpleManagedLayout;
@@ -134,7 +135,8 @@ public class MenuBarConnector extends AbstractComponentConnector
                         }
                     }
 
-                    currentItem = currentMenu.addItem(itemHTML.toString(), cmd);
+                    currentItem = currentMenu.addItem(itemHTML, cmd);
+                    currentItem.setId("" + itemId);
                     currentItem.updateFromUIDL(item, client);
 
                     if (item.getChildCount() > 0) {
@@ -225,5 +227,20 @@ public class MenuBarConnector extends AbstractComponentConnector
          * is used.
          */
         return true;
+    }
+
+    @OnStateChange("enabled")
+    void updateEnabled() {
+        if (getState().enabled) {
+            getWidget().getElement().removeAttribute("aria-disabled");
+        } else {
+            getWidget().getElement().setAttribute("aria-disabled", "true");
+        }
+    }
+
+    @OnStateChange("tabIndex")
+    void updateTabIndex() {
+        getWidget().getElement().setAttribute("tabindex",
+                String.valueOf(getState().tabIndex));
     }
 }

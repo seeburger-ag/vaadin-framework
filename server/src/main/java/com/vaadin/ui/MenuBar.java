@@ -16,21 +16,24 @@
 package com.vaadin.ui;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.parser.Tag;
 
+import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.PaintException;
 import com.vaadin.server.PaintTarget;
 import com.vaadin.server.Resource;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.shared.ui.menubar.MenuBarConstants;
 import com.vaadin.shared.ui.menubar.MenuBarState;
 import com.vaadin.ui.Component.Focusable;
@@ -138,9 +141,19 @@ public class MenuBar extends AbstractComponent
             }
 
             String description = item.getDescription();
-            if (description != null && description.length() > 0) {
+            if (description != null && !description.isEmpty()) {
                 target.addAttribute(MenuBarConstants.ATTRIBUTE_ITEM_DESCRIPTION,
                         description);
+            }
+
+            ContentMode contentMode = item.getDescriptionContentMode();
+            // If the contentMode is equal to ContentMode.PREFORMATTED, we don't
+            // add any attribute.
+            if (contentMode != null
+                    && contentMode != ContentMode.PREFORMATTED) {
+                target.addAttribute(
+                        MenuBarConstants.ATTRIBUTE_ITEM_DESCRIPTION_CONTENT_MODE,
+                        contentMode.name());
             }
             if (item.isCheckable()) {
                 // if the "checked" attribute is present (either true or false),
@@ -159,10 +172,10 @@ public class MenuBar extends AbstractComponent
         target.endTag("item");
     }
 
-    /** Deserialize changes received from client. */
+    /** De-serialize changes received from client. */
     @Override
     public void changeVariables(Object source, Map<String, Object> variables) {
-        Stack<MenuItem> items = new Stack<MenuItem>();
+        final Deque<MenuItem> items = new ArrayDeque<MenuItem>();
         boolean found = false;
 
         if (variables.containsKey("clickedId")) {
@@ -176,7 +189,7 @@ public class MenuBar extends AbstractComponent
             MenuItem tmpItem = null;
 
             // Go through all the items in the menu
-            while (!found && !items.empty()) {
+            while (!found && !items.isEmpty()) {
                 tmpItem = items.pop();
                 found = (clickedId.intValue() == tmpItem.getId());
 
@@ -458,6 +471,7 @@ public class MenuBar extends AbstractComponent
         private boolean isSeparator = false;
         private String styleName;
         private String description;
+        private ContentMode descriptionContentMode = ContentMode.PREFORMATTED;
         private boolean checkable = false;
         private boolean checked = false;
 
@@ -466,7 +480,7 @@ public class MenuBar extends AbstractComponent
          * command associated with it. Icon and command can be null, but a
          * caption must be given.
          *
-         * @param text
+         * @param caption
          *            The text associated with the command
          * @param command
          *            The command to be fired
@@ -510,6 +524,22 @@ public class MenuBar extends AbstractComponent
             MenuItem item = addItemBefore("", null, null, itemToAddBefore);
             item.setSeparator(true);
             return item;
+        }
+
+        /**
+         * Add a new menu item inside this menu item, creating a sub-menu.
+         * <p>
+         * Clicking on the new item has no effect. Use
+         * {@link #addItem(String, Command)} or {@link #setCommand(Command)} to
+         * assign an action to the menu item.
+         *
+         * @param caption
+         *            the text for the menu item
+         *
+         * @since 8.4
+         */
+        public MenuBar.MenuItem addItem(String caption) {
+            return addItem(caption, null, null);
         }
 
         /**
@@ -791,7 +821,32 @@ public class MenuBar extends AbstractComponent
          *            the new description string for the component.
          */
         public void setDescription(String description) {
+            setDescription(description, ContentMode.PREFORMATTED);
+        }
+
+        /**
+         * Analogous method to
+         * {@link AbstractComponent#setDescription(String, ContentMode)}. Sets
+         * the item's description using given content mode. See
+         * {@link #getDescription()} for more information on what the
+         * description is.
+         * <p>
+         * If the content {@code mode} is {@literal ContentMode.HTML} the
+         * description is displayed as HTML in tooltips or directly in certain
+         * components so care should be taken to avoid creating the possibility
+         * for HTML injection and possibly XSS vulnerabilities.
+         *
+         * @see ContentMode
+         *
+         * @param description
+         *            the new description string for the component.
+         * @param mode
+         *            the content mode for the description
+         * @since 8.3
+         */
+        public void setDescription(String description, ContentMode mode) {
             this.description = description;
+            this.descriptionContentMode = mode;
             markAsDirty();
         }
 
@@ -853,6 +908,23 @@ public class MenuBar extends AbstractComponent
          */
         public String getDescription() {
             return description;
+        }
+
+        /**
+         * Gets the content mode of the description of the menu item. The
+         * description is displayed as the tooltip of the menu item in the UI.
+         * <p>
+         * If no content mode was explicitly set using the
+         * {@link #setDescription(String, ContentMode)} method, the content mode
+         * will be {@link ContentMode#PREFORMATTED}
+         * </p>
+         *
+         * @return the {@link ContentMode} of the description of this menu item
+         * @see ContentMode
+         * @since 8.3
+         */
+        public ContentMode getDescriptionContentMode() {
+            return descriptionContentMode;
         }
 
         /**
@@ -934,26 +1006,44 @@ public class MenuBar extends AbstractComponent
          * The CSS style corresponding to the checked state is "-checked".
          * </p>
          *
-         * @return true if the item is checked, false otherwise
          * @since 6.6.2
          */
         public void setChecked(boolean checked) {
             this.checked = checked;
             markAsDirty();
         }
-    }// class MenuItem
+
+        /**
+         * Gets the menu bar this item is part of.
+         *
+         * @return the menu bar this item is attached to
+         * @since 8.4
+         */
+        public MenuBar getMenuBar() {
+            return MenuBar.this;
+        }
+
+        public AbstractClientConnector getConnector() {
+            return getMenuBar();
+        }
+
+        public String getPartInformation() {
+            return String.valueOf(getId());
+        }
+    }
 
     @Override
     public void writeDesign(Element design, DesignContext designContext) {
         super.writeDesign(design, designContext);
         for (MenuItem item : getItems()) {
-            design.appendChild(createMenuElement(item));
+            design.appendChild(createMenuElement(item, designContext));
         }
 
         // in many cases there seems to be an empty more menu item
         if (getMoreMenuItem() != null
                 && !getMoreMenuItem().getText().isEmpty()) {
-            Element moreMenu = createMenuElement(getMoreMenuItem());
+            Element moreMenu = createMenuElement(getMoreMenuItem(),
+                    designContext);
             moreMenu.attr("more", true);
             design.appendChild(moreMenu);
         }
@@ -963,7 +1053,7 @@ public class MenuBar extends AbstractComponent
         }
     }
 
-    protected Element createMenuElement(MenuItem item) {
+    protected Element createMenuElement(MenuItem item, DesignContext context) {
         Element menuElement = new Element(Tag.valueOf("menu"), "");
         // Defaults
         MenuItem def = new MenuItem("", null, null);
@@ -985,12 +1075,16 @@ public class MenuBar extends AbstractComponent
                 item.getDescription(), def.getDescription(), String.class);
         DesignAttributeHandler.writeAttribute("style-name", attr,
                 item.getStyleName(), def.getStyleName(), String.class);
+        DesignAttributeHandler.writeAttribute("descriptioncontentmode", attr,
+                item.getDescriptionContentMode().name(),
+                def.getDescriptionContentMode().name(), String.class);
+
 
         menuElement.append(item.getText());
 
         if (item.hasChildren()) {
             for (MenuItem subMenu : item.getChildren()) {
-                menuElement.appendChild(createMenuElement(subMenu));
+                menuElement.appendChild(createMenuElement(subMenu, context));
             }
         }
 
@@ -1042,8 +1136,16 @@ public class MenuBar extends AbstractComponent
                     attr, boolean.class));
         }
         if (menuElement.hasAttr("description")) {
-            menu.setDescription(DesignAttributeHandler
-                    .readAttribute("description", attr, String.class));
+            String description = DesignAttributeHandler
+                    .readAttribute("description", attr, String.class);
+            if (menuElement.hasAttr("descriptioncontentmode")) {
+                String contentModeString = DesignAttributeHandler.readAttribute(
+                        "descriptioncontentmode", attr, String.class);
+                menu.setDescription(description,
+                        ContentMode.valueOf(contentModeString));
+            } else {
+                menu.setDescription(description);
+            }
         }
         if (menuElement.hasAttr("style-name")) {
             menu.setStyleName(DesignAttributeHandler.readAttribute("style-name",
