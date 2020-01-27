@@ -65,9 +65,9 @@ public class WindowConnector extends AbstractSingleComponentContainerConnector
     private Node windowClone;
 
     /**
-     * The current scroll position of the window.
+     * The current scroll position of the window. Initially the scroll is at the beginning of the content.
      */
-    private int scrollTop;
+    private int scrollTop = 0;
 
     private ClickEventHandler clickEventHandler = new ClickEventHandler(this) {
         @Override
