@@ -2209,24 +2209,8 @@ public class Escalator extends Widget
         }
 
         double measureCellWidth(TableCellElement cell, boolean withContent) {
-            /*
-             * To get the actual width of the contents, we need to get the cell
-             * content without any hardcoded height or width.
-             *
-             * But we don't want to modify the existing column, because that
-             * might trigger some unnecessary listeners and whatnot. So,
-             * instead, we make a deep clone of that cell, but without any
-             * explicit dimensions, and measure that instead.
-             */
-
-            TableCellElement cellClone = TableCellElement
-                    .as((Element) cell.cloneNode(withContent));
-            cellClone.getStyle().clearHeight();
-            cellClone.getStyle().clearWidth();
-
-            cell.getParentElement().insertBefore(cellClone, cell);
             double requiredWidth = WidgetUtil
-                    .getRequiredWidthBoundingClientRectDouble(cellClone);
+                    .getRequiredWidthBoundingClientRectDouble(cell);
             if (BrowserInfo.get().isIE()) {
                 /*
                  * IE browsers have some issues with subpixels. Occasionally
@@ -2235,9 +2219,6 @@ public class Escalator extends Widget
                  */
                 requiredWidth += 0.01;
             }
-
-            cellClone.removeFromParent();
-
             return requiredWidth;
         }
 
@@ -4596,12 +4577,18 @@ public class Escalator extends Widget
                 return;
             }
 
+            // first clear the styles width of all cells
+            for (Entry<Integer, Double> entry : indexWidthMap.entrySet()) {
+                int index = entry.getKey().intValue();
+                checkValidColumnIndex(index);
+                clearWidths(header, index);
+                clearWidths(body, index);
+                clearWidths(footer, index);
+            }
+
             for (Entry<Integer, Double> entry : indexWidthMap.entrySet()) {
                 int index = entry.getKey().intValue();
                 double width = entry.getValue().doubleValue();
-
-                checkValidColumnIndex(index);
-
                 // Not all browsers will accept any fractional size..
                 width = WidgetUtil.roundSizeDown(width);
                 columns.get(index).setWidth(width);
@@ -4614,6 +4601,20 @@ public class Escalator extends Widget
             footer.reapplyColumnWidths();
 
             recalculateElementSizes();
+        }
+
+        /**
+         * Clears the width style of all cells of given container on given colIndex.
+         *
+         * @param container     to clear the cell widths style
+         * @param colIndex      of column of cells
+         */
+        private void clearWidths(AbstractRowContainer container, int colIndex) {
+            final NodeList<TableRowElement> rows = container.getElement().getRows();
+            for (int row = 0; row < rows.getLength(); row++) {
+                rows.getItem(row).getCells()
+                        .getItem(colIndex).getStyle().clearWidth();
+            }
         }
 
         private void checkValidColumnIndex(int index)
