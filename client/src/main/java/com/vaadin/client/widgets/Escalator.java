@@ -2209,8 +2209,21 @@ public class Escalator extends Widget
         }
 
         double measureCellWidth(TableCellElement cell, boolean withContent) {
-            double requiredWidth = WidgetUtil
-                    .getRequiredWidthBoundingClientRectDouble(cell);
+            double requiredWidth;
+            if (cell.getStyle().getWidth().isEmpty() && withContent) {
+                requiredWidth = WidgetUtil
+                        .getRequiredWidthBoundingClientRectDouble(cell);
+            }
+            else {
+                TableCellElement cellClone = TableCellElement.as((Element)
+                        cell.cloneNode(withContent));
+                cellClone.getStyle().clearHeight();
+                cellClone.getStyle().clearWidth();
+
+                cell.getParentElement().insertBefore(cellClone, cell);
+                requiredWidth = WidgetUtil.getRequiredWidthBoundingClientRectDouble(cellClone);
+                cellClone.removeFromParent();
+            }
             if (BrowserInfo.get().isIE()) {
                 /*
                  * IE browsers have some issues with subpixels. Occasionally
@@ -4581,9 +4594,11 @@ public class Escalator extends Widget
             for (Entry<Integer, Double> entry : indexWidthMap.entrySet()) {
                 int index = entry.getKey().intValue();
                 checkValidColumnIndex(index);
-                clearWidths(header, index);
-                clearWidths(body, index);
-                clearWidths(footer, index);
+                if (entry.getValue().doubleValue() <= 0) {
+                    clearWidths(header, index);
+                    clearWidths(body, index);
+                    clearWidths(footer, index);
+                }
             }
 
             for (Entry<Integer, Double> entry : indexWidthMap.entrySet()) {
@@ -7122,5 +7137,12 @@ public class Escalator extends Widget
      */
     private static boolean isCurrentBrowserIE11OrEdge() {
         return BrowserInfo.get().isIE11() || BrowserInfo.get().isEdge();
+    }
+
+    /**
+     * Updates the scroll position.
+     */
+    void updateScrollPosition() {
+        scroller.onScroll();
     }
 }
