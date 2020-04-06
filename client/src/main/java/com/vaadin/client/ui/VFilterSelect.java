@@ -2217,7 +2217,7 @@ public class VFilterSelect extends Composite
                 // Handle addition of new items.
                 suggestionPopup.menu.doSelectedItemAction();
             }
-
+            event.preventDefault();
             event.stopPropagation();
             break;
         }
