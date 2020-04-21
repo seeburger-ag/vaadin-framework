@@ -478,8 +478,10 @@ public class VMenuBar extends FocusableFlowPanel implements
                     && item.getSubMenu() != visibleChildMenu) {
                 setSelected(item);
                 showChildMenu(item);
+                item.getElement().setAttribute("aria-expanded", "true");
                 menuVisible = true;
             } else if (!subMenu) {
+                item.getElement().setAttribute("aria-expanded", "false");
                 setSelected(null);
                 hideChildren();
                 menuVisible = false;
@@ -852,6 +854,11 @@ public class VMenuBar extends FocusableFlowPanel implements
     public static class CustomMenuItem extends Widget
             implements HasHTML, SubPartAware {
 
+        /** Aria-haspopup inidcates whether a menu item has a submenu with popup. */
+        private static final String ARIA_HASPOPUP = "aria-haspopup";
+        /** Aria-expanded needed for items with submenu. */
+        private static final String ARIA_EXPANDED = "aria-expanded";
+
         protected String html = null;
         protected Command command = null;
         protected VMenuBar subMenu = null;
@@ -982,9 +989,11 @@ public class VMenuBar extends FocusableFlowPanel implements
         public void setSubMenu(VMenuBar subMenu) {
             this.subMenu = subMenu;
             if (subMenu != null) {
-                getElement().setAttribute("aria-haspopup", "true");
+                getElement().setAttribute(ARIA_EXPANDED, "false");
+                getElement().setAttribute(ARIA_HASPOPUP, "true");
             } else {
-                getElement().setAttribute("aria-haspopup", "false");
+                getElement().removeAttribute(ARIA_EXPANDED);
+                getElement().setAttribute(ARIA_HASPOPUP, "false");
             }
         }
 
