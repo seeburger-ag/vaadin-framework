@@ -969,6 +969,9 @@ public class VWindow extends VOverlay implements ShortcutActionHandlerOwner,
         html = prefix + html + postfix;
         headerText.setInnerHTML(html);
 
+        Roles.getHeadingRole().set(headerText);
+        Roles.getHeadingRole().setAriaLevelProperty(headerText, 1);
+
         if (iconURL != null) {
             Icon icon = client.getIcon(iconURL);
             DOM.insertChild(headerText, icon.getElement(), 0);
