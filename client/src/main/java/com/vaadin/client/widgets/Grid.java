@@ -5665,6 +5665,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             } else {
                 rowElement.removeAttribute("aria-selected");
             }
+            final int ariaRowIndex = rowIndex + getHeaderRowCount() + 1; // we need to start at index 1 not 0
+            rowElement.setAttribute("aria-rowindex", String.valueOf(ariaRowIndex));
 
             if (hasData) {
                 setStyleName(rowElement, rowSelectedStyleName, isSelected);
@@ -5694,6 +5696,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             for (FlyweightCell cell : cellsToUpdate) {
                 Column<?, T> column = getVisibleColumn(cell.getColumn());
                 final int columnIndex = getColumns().indexOf(column);
+
+                cell.getElement().setAttribute("aria-colindex", String.valueOf(columnIndex +1) );
 
                 assert column != null : "Column was not found from cell ("
                         + cell.getColumn() + "," + cell.getRow() + ")";
@@ -5837,7 +5841,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
 
                 // Decorate default row with sorting indicators
                 if (staticRow instanceof HeaderRow) {
-                    addAriaLabelToHeaderRow(cell);
+                    addAriaLabelToHeaderRow(row.getElement(), cell);
                     addSortingIndicatorsToHeaderRow((HeaderRow) staticRow,
                             cell);
                 }
@@ -6081,7 +6085,7 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             }
         }
 
-        private void addAriaLabelToHeaderRow(FlyweightCell cell) {
+        private void addAriaLabelToHeaderRow(TableRowElement tr, FlyweightCell cell) {
 
             Element cellElement = cell.getElement();
 
@@ -6093,6 +6097,9 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             } else {
                 cellElement.removeAttribute("aria-label");
             }
+            final int columnIndex = getColumns().indexOf(column);
+            cellElement.setAttribute("aria-colindex", String.valueOf(columnIndex + 1));//index should start at 1
+            tr.setAttribute("aria-rowindex", String.valueOf(cell.getRow() + 1)); // aria-rowindex starts at 1
         }
 
         private void addSortingIndicatorsToHeaderRow(HeaderRow headerRow,
@@ -6642,6 +6649,8 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
         refreshHeader();
         this.header.updateColSpans();
         this.footer.updateColSpans();
+
+        this.getEscalator().getTable().setAttribute("aria-colcount", String.valueOf(getColumnCount()));
     }
 
     private void sinkEvents(Collection<String> events) {
