@@ -495,7 +495,13 @@ public class VNotification extends VOverlay {
                 .hasAttribute(UIConstants.ATTRIBUTE_NOTIFICATION_ICON)) {
             String iconUri = notification.getStringAttribute(
                     UIConstants.ATTRIBUTE_NOTIFICATION_ICON);
-            html += client.getIcon(iconUri).getElement().getString();
+            final com.google.gwt.user.client.Element image = client.getIcon(iconUri).getElement();
+            if(notification.hasAttribute(UIConstants.ATTRIBUTE_NOTIFICATION_ICON_ALT_TEXT)) {
+                final String altText = notification.getStringAttribute(
+                                                                 UIConstants.ATTRIBUTE_NOTIFICATION_ICON_ALT_TEXT);
+                image.setAttribute("alt", altText);
+            }
+            html += image.getString();
         }
         if (notification
                 .hasAttribute(UIConstants.ATTRIBUTE_NOTIFICATION_CAPTION)) {

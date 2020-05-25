@@ -39,6 +39,8 @@ public class UIConstants implements Serializable {
     @Deprecated
     public static final String ATTRIBUTE_NOTIFICATION_ICON = "icon";
     @Deprecated
+    public static final String ATTRIBUTE_NOTIFICATION_ICON_ALT_TEXT = "alttext";
+    @Deprecated
     public static final String ATTRIBUTE_NOTIFICATION_POSITION = "position";
     @Deprecated
     public static final String ATTRIBUTE_NOTIFICATION_DELAY = "delay";

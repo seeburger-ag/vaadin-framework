@@ -120,6 +120,7 @@ public class Notification implements Serializable {
     private int delayMsec = 0;
     private String styleName;
     private boolean htmlContentAllowed;
+    private String altText;
 
     /**
      * Creates a "humanized" notification message.
@@ -300,7 +301,20 @@ public class Notification implements Serializable {
      *            The desired message icon
      */
     public void setIcon(Resource icon) {
+        setIcon(icon, null);
+    }
+
+    /**
+     * Sets the icon part of the notification message.
+     *
+     * @param icon
+     *            The desired message icon
+     * @param altText
+     *            The alt text for the specified icon
+     */
+    public void setIcon(Resource icon, String altText) {
         this.icon = icon;
+        this.altText = altText;
     }
 
     /**
@@ -434,5 +448,14 @@ public class Notification implements Serializable {
      */
     public static void show(String caption, String description, Type type) {
         new Notification(caption, description, type).show(Page.getCurrent());
+    }
+
+    /**
+     * Gets the alt text for notification icon.
+     *
+     * @return The specified alt text
+     */
+    public String getAltText() {
+        return this.altText;
     }
 }

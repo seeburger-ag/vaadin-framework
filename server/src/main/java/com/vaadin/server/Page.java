@@ -860,6 +860,10 @@ public class Page implements Serializable {
                 if (n.getIcon() != null) {
                     target.addAttribute(UIConstants.ATTRIBUTE_NOTIFICATION_ICON,
                             n.getIcon());
+                    if(n.getAltText() != null){
+                        target.addAttribute(UIConstants.ATTRIBUTE_NOTIFICATION_ICON_ALT_TEXT,
+                                            n.getAltText());
+                    }
                 }
                 if (!n.isHtmlContentAllowed()) {
                     target.addAttribute(
