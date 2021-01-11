@@ -1,11 +1,11 @@
 /*
- * Copyright 2000-2018 Vaadin Ltd.
+ * Copyright 2000-2020 Vaadin Ltd.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Commercial Vaadin Developer License version 4.0 (CVDLv4); 
+ * you may not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://vaadin.com/license/cvdl-4.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -6627,8 +6627,14 @@ public class Grid<T> extends ResizeComposite implements HasSelectionHandlers<T>,
             }
         }
         if (visibleNewColumns > 0) {
+            int escalatorIndex = index;
+            for (int existingColumn = 0; existingColumn < index; existingColumn++) {
+                if (getColumn(existingColumn).isHidden()) {
+                    escalatorIndex--;
+                }
+            }
             final ColumnConfiguration columnConfiguration = this.escalator.getColumnConfiguration();
-            columnConfiguration.insertColumns(index, visibleNewColumns);
+            columnConfiguration.insertColumns(escalatorIndex, visibleNewColumns);
         }
 
         for (final Column<?, T> column : columnCollection) {

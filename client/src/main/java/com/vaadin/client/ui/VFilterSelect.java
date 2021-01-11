@@ -1,11 +1,11 @@
 /*
- * Copyright 2000-2018 Vaadin Ltd.
+ * Copyright 2000-2020 Vaadin Ltd.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Commercial Vaadin Developer License version 4.0 (CVDLv4); 
+ * you may not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://vaadin.com/license/cvdl-4.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -1553,6 +1553,8 @@ public class VFilterSelect extends Composite
     /** For internal use only. May be removed or replaced in the future. */
     public boolean updateSelectionWhenReponseIsReceived = false;
 
+    private boolean tabPressedWhenPopupOpen = false;
+
     /** For internal use only. May be removed or replaced in the future. */
     public boolean initDone = false;
 
@@ -2200,6 +2202,8 @@ public class VFilterSelect extends Composite
             event.stopPropagation();
             break;
         case KeyCodes.KEY_TAB:
+        	tabPressedWhenPopupOpen = true;
+        	waitingForFilteringResponse = false;                        
         case KeyCodes.KEY_ENTER:
 
             if (!allowNewItem) {
@@ -2480,6 +2484,15 @@ public class VFilterSelect extends Composite
 
         focused = false;
         if (!readonly) {
+            if (tabPressedWhenPopupOpen) {
+                tabPressedWhenPopupOpen = false;
+                waitingForFilteringResponse = false;
+            } else if ((!suggestionPopup.isAttached() && waitingForFilteringResponse)
+                    || suggestionPopup.isJustClosed()) {
+                // typing so fast the popup was never opened, or it's just
+                // closed
+            waitingForFilteringResponse = false;
+            }
             if (textInputEnabled && allowNewItem) {
                 suggestionPopup.menu.doSelectedItemAction();
             }

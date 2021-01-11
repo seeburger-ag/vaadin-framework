@@ -1,11 +1,11 @@
 /*
- * Copyright 2000-2018 Vaadin Ltd.
+ * Copyright 2000-2020 Vaadin Ltd.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Commercial Vaadin Developer License version 4.0 (CVDLv4); 
+ * you may not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://vaadin.com/license/cvdl-4.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -134,7 +134,7 @@ public abstract class VaadinService implements Serializable {
 
     private Iterable<RequestHandler> requestHandlers;
 
-    private boolean atmosphereAvailable = checkAtmosphereSupport();
+    private Boolean atmosphereAvailable = null;
 
     /**
      * Keeps track of whether a warning about missing push support has already
@@ -1269,7 +1269,8 @@ public abstract class VaadinService implements Serializable {
      */
     private int getUidlRequestTimeout(VaadinSession session) {
         return getDeploymentConfiguration().isCloseIdleSessions()
-                ? session.getSession().getMaxInactiveInterval() : -1;
+                ? session.getSession().getMaxInactiveInterval()
+                : -1;
     }
 
     /**
@@ -1651,7 +1652,7 @@ public abstract class VaadinService implements Serializable {
      *         is not available.
      */
     public boolean ensurePushAvailable() {
-        if (atmosphereAvailable) {
+        if (isAtmosphereAvailable()) {
             return true;
         } else {
             if (!pushWarningEmitted) {
@@ -1663,7 +1664,7 @@ public abstract class VaadinService implements Serializable {
         }
     }
 
-    private static boolean checkAtmosphereSupport() {
+    private boolean checkAtmosphereSupport() {
         String rawVersion = AtmospherePushConnection.getAtmosphereVersion();
         if (rawVersion == null) {
             return false;
@@ -1686,6 +1687,9 @@ public abstract class VaadinService implements Serializable {
      * @return true if Atmosphere is available, false otherwise
      */
     protected boolean isAtmosphereAvailable() {
+        if (atmosphereAvailable == null) {
+            atmosphereAvailable = checkAtmosphereSupport();
+        }
         return atmosphereAvailable;
     }
 
