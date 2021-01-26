@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -168,6 +169,18 @@ public abstract class AbstractComponent extends AbstractClientConnector
     public String getDebugId() {
         return getId();
     }
+
+
+    @Override
+    public List<String> getStyleList()
+    {
+        AbstractComponentState state = getState(false);
+        if(ComponentStateUtil.hasStyles(state)) {
+            return state.styles;
+        }
+        return Collections.emptyList();
+    }
+
 
     /*
      * Gets the component's style. Don't add a JavaDoc comment here, we use the
